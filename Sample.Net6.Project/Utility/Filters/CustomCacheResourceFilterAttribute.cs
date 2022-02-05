@@ -23,14 +23,22 @@ namespace Sample.Net6.Project.Utility.Filters
         /// <param name="context"></param>
         public void OnResourceExecuting(ResourceExecutingContext context)
         {
+            Console.WriteLine("CustomResourceFilterAttribute.OnResourceExecuting");
+
+            // 判斷是否 AllowAnonymous
+            // IResourceFilter 不支援 AllowAnonymous，所以必須自行判斷
+            if (context.ActionDescriptor.EndpointMetadata.Any(x =>
+                    x.GetType() == typeof(CustomAllowAnonymousAttribute)))
+            {
+                return;
+            }
+
             string key = context.HttpContext.Request.Path; // 請求的路徑
             if (_cacheDictionary.ContainsKey(key))
             {
                 // 若給 Result 賦值，就會中斷繼續執行，直接返回調用方 (不再執行 Action 及 OnResourceExecuted)
                 context.Result = (IActionResult)_cacheDictionary[key];
             }
-
-            Console.WriteLine("CustomResourceFilterAttribute.OnResourceExecuting");
         }
 
         /// <summary>
@@ -39,10 +47,18 @@ namespace Sample.Net6.Project.Utility.Filters
         /// <param name="context"></param>
         public void OnResourceExecuted(ResourceExecutedContext context)
         {
+            Console.WriteLine("CustomResourceFilterAttribute.OnResourceExecuted");
+
+            // 判斷是否 AllowAnonymous
+            // IResourceFilter 不支援 AllowAnonymous，所以必須自行判斷
+            if (context.ActionDescriptor.EndpointMetadata.Any(x =>
+                    x.GetType() == typeof(CustomAllowAnonymousAttribute)))
+            {
+                return;
+            }
+
             string key = context.HttpContext.Request.Path;
             _cacheDictionary[key] = context.Result;
-
-            Console.WriteLine("CustomResourceFilterAttribute.OnResourceExecuted");
         }
     }
 }

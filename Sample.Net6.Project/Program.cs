@@ -1,4 +1,5 @@
 using NLog.Web;
+using Sample.Net6.Project.Utility.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,17 @@ builder.Logging.AddNLog("ConfigFiles/NLog.config");
 
 // 加入 Session 服務
 builder.Services.AddSession();
+
+builder.Services.AddControllersWithViews(mvcOptions =>
+{
+    // 全域註冊 Filter (對整個專案都生效)
+    //mvcOptions.Filters.Add<CustomCacheResourceFilterAttribute>();
+});
+
+
+
+// ====================================================
+
 
 var app = builder.Build();
 
