@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json;
+using Sample.Net6.ExceptionService;
 using Sample.Net6.Project.Models;
 using Sample.Net6.Project.Utility.Filters;
 
 namespace Sample.Net6.Project.Controllers
 {
-    [CustomCacheResourceFilter]
+    //[CustomCacheResourceFilter]
     public class AopController : Controller
     {
         /*
@@ -40,6 +41,7 @@ namespace Sample.Net6.Project.Controllers
          *            如果在賦值之後還想作其他處理，則可以使用 AlwaysRunResultFilter。
          *
          * 6. IExceptionFilter：異常處理
+         *    範例：CustomExceptionFilterAttribute.cs
          *
          * Filter 註冊方式
          * 1) 方法註冊：只對該方法有效。
@@ -56,6 +58,11 @@ namespace Sample.Net6.Project.Controllers
          * 1) IResourceFilter
          * 2) IActionFilter
          * 3) IResultFilter
+         *
+         * ExceptionFilter 無法捕捉到的異常處理
+         * 1) 中間件支援
+         * 2) 綜合支援可以捕捉到所有的異常
+         * 3) ExceptionFilter + 中間件 = 處理所有異常
          */
 
         public AopController() {
@@ -172,6 +179,7 @@ namespace Sample.Net6.Project.Controllers
 
         #region 擴展 AllowAnonymousAttribute
 
+        // 要測試此特性，請先將 Controller 上的 CustomCacheResourceFilter 的註解取消
         [CustomAllowAnonymous]
         public IActionResult ExpandAllowAnonymousAttribute()
         {
@@ -179,6 +187,97 @@ namespace Sample.Net6.Project.Controllers
             {
                 Message = "Hello ExpandAllowAnonymousAttribute"
             });
+        }
+
+        #endregion
+
+        #region IExceptionFilter
+
+        [TypeFilter(typeof(CustomExceptionFilterAttribute))]
+        public IActionResult IExceptionFilter()
+        {
+            throw new Exception("IExceptionFilter 測試");
+        }
+
+        #endregion
+
+        #region ExceptionFilter 可以捕捉到的異常
+
+        /*
+         * 1. Action 出現沒有處理的異常
+         * 2. Action 出現已經處理的異常 (已處理過的異常不會被 ExceptionFilter 捕捉)
+         * 3. Service 層的異常
+         * 4. View 綁定時出現的異常 (ExceptionFilter 捕捉不到)
+         * 5. 不存在的 Url 地址 (404，ExceptionFilter 捕捉不到)
+         * 6. 其他 Filter 中發生的異常
+         *    ActionFilter 中發生異常 - 可以捕捉到
+         *    ResourceFilter 中發生異常 - 捕捉不到
+         *    ResultFilter 中發生異常 - 捕捉不到
+         * 7. 控制器建構函式出現異常
+         */
+
+        /// <summary>
+        /// Action 出現沒有處理的異常
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        [TypeFilter(typeof(CustomExceptionFilterAttribute))]
+        public IActionResult ActionExceptionNoArrange()
+        {
+            throw new Exception("Action 出現沒有處理的異常");
+        }
+
+        /// <summary>
+        /// Action 出現已經處理的異常
+        /// </summary>
+        /// <returns></returns>
+        [TypeFilter(typeof(CustomExceptionFilterAttribute))]
+        public IActionResult ActionExceptionArrange()
+        {
+            try
+            {
+                throw new Exception("Action 出現已經處理的異常");
+            }
+            catch (Exception e)
+            {
+                return View();
+            }
+        }
+
+        /// <summary>
+        /// Service 層的異常
+        /// </summary>
+        /// <returns></returns>
+        [TypeFilter(typeof(CustomExceptionFilterAttribute))]
+        public IActionResult ServiceException()
+        {
+            new ExceptionInfoService().Show();
+            return View();
+        }
+
+        /// <summary>
+        /// View 綁定時出現的異常
+        /// </summary>
+        /// <returns></returns>
+        [TypeFilter(typeof(CustomExceptionFilterAttribute))]
+        public IActionResult ViewBindingException()
+        {
+            return View();
+        }
+
+        /// <summary>
+        ///其他 Filter 中發生的異常
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+
+        [TypeFilter(typeof(CustomExceptionFilterAttribute))]
+        //[TypeFilter(typeof(CustomLogActionFilterAttribute))] // ActionFilter 中發生異常 - 可以捕捉到
+        //[TypeFilter(typeof(CustomCacheResourceFilterAttribute))] // ResourceFilter 中發生異常 - 捕捉不到
+        //[TypeFilter(typeof(CustomResultFilterAttribute))] // ResultFilter 中發生異常 - 捕捉不到
+        public IActionResult Index12()
+        {
+            return View();
         }
 
         #endregion
