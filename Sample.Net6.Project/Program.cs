@@ -37,6 +37,9 @@ builder.Services.AddAuthentication(option =>
 {
     // 若未找到使用者信息，認證失敗，授權也失敗，則跳轉到指定的 Action
     option.LoginPath = "/Auth/Login";
+
+    // 雖已登入，但若沒有權限，則跳轉至指定的 Action
+    option.AccessDeniedPath = "/Home/NoAuthority";
 });
 
 #endregion

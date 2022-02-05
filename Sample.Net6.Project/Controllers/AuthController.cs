@@ -32,8 +32,35 @@ namespace Sample.Net6.Project.Controllers
          * 3. 授權生效：在 Action 上加上 [Authorize]
          */
 
-        [Authorize]
+        /// <summary>
+        /// 在授權的時候，必須要先認證，先找出使用者信息，如果可以找到使用者信息，表示使用者登入過，
+        /// 但登入過不表示有權限。
+        /// </summary>
+        /// <returns></returns>
+        //[Authorize] // 預設授權渠道，有使用者信息即授權成功
+        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult Index()
+        {
+            var user = HttpContext.User;
+            return View();
+        }
+
+        /// <summary>
+        /// 角色授權，Admin 角色才有權限，登入時 ClaimTypes.Role = "Admin"
+        /// </summary>
+        /// <returns></returns>
+        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Roles = "Admin")]
+        public IActionResult RoleAdmin()
+        {
+            return View();
+        }
+
+        /// <summary>
+        /// 角色授權，Teacher 角色才有權限，登入時 ClaimTypes.Role = "Teacher"
+        /// </summary>
+        /// <returns></returns>
+        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Roles = "Teacher")]
+        public IActionResult RoleTeacher()
         {
             return View();
         }
