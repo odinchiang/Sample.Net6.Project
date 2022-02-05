@@ -60,7 +60,7 @@ namespace Sample.Net6.Project.Controllers
          * 3) IResultFilter
          *
          * ExceptionFilter 無法捕捉到的異常處理
-         * 1) 中間件支援
+         * 1) 中間件支援 (見 Program.cs)
          * 2) 綜合支援可以捕捉到所有的異常
          * 3) ExceptionFilter + 中間件 = 處理所有異常
          */

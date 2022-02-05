@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Diagnostics;
 using NLog.Web;
 using Sample.Net6.Project.Utility.Filters;
@@ -21,6 +22,24 @@ builder.Services.AddControllersWithViews(mvcOptions =>
     // 全域註冊 Filter (對整個專案都生效)
     //mvcOptions.Filters.Add<CustomCacheResourceFilterAttribute>();
 });
+
+#region 配置認證
+
+// 選擇使用哪種方式認證
+builder.Services.AddAuthentication(option =>
+{
+    option.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    option.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    option.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    option.DefaultForbidScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    option.DefaultSignOutScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+}).AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, option =>
+{
+    // 若未找到使用者信息，認證失敗，授權也失敗，則跳轉到指定的 Action
+    option.LoginPath = "/Auth/Login";
+});
+
+#endregion
 
 
 
@@ -77,7 +96,12 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthorization();
+#region 認證與授權
+
+app.UseAuthentication(); // 認證(鑑權)
+app.UseAuthorization(); // 授權
+
+#endregion
 
 app.MapControllerRoute(
     name: "default",
