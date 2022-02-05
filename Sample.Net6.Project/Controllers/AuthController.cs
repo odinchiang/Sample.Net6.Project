@@ -9,7 +9,7 @@ namespace Sample.Net6.Project.Controllers
     public class AuthController : Controller
     {
         /*
-         * 授權基本配置
+         * === 授權基本配置 ===
          *
          * 1. 使用中間件 (Program.cs)
          *    app.UseAuthentication(); // 認證(鑑權)
@@ -30,6 +30,22 @@ namespace Sample.Net6.Project.Controllers
               });
          *
          * 3. 授權生效：在 Action 上加上 [Authorize]
+         *
+         * === 角色授權 ===
+         *
+         * 1. 標記多個 [Authorize]
+         *    給定不同的 Role，當前使用者必須同時包含此處指定的多個 Role 的角色，同時滿足才能授權訪問。
+         *    "且"的關係。
+         *
+         * 2. 標記單個 [Authorize]
+         *    以逗號分隔多個 Role，多個角色只要有一個是包含在使用者信息中，就能被授權訪問。
+         *    "或"的關係。
+         *
+         *  === 策略授權 ===
+         *
+         * 1. 角色授權其實就是一個特殊的策略授權，除了角色，也可以用其他來判斷。
+         * 2. 定義策略 (Program.cs)
+         * 3. 策略生效：標記策略
          */
 
         /// <summary>
@@ -46,11 +62,41 @@ namespace Sample.Net6.Project.Controllers
         }
 
         /// <summary>
-        /// 角色授權，Admin 角色才有權限，登入時 ClaimTypes.Role = "Admin"
+        /// 角色授權，Admin 角色才有權限
         /// </summary>
         /// <returns></returns>
+        /// <remarks>
+        /// 若標記一個角色時，使用者角色(ClaimTypes.Role)有其中一個即可。
+        /// </remarks>
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Roles = "Admin")]
         public IActionResult RoleAdmin()
+        {
+            return View();
+        }
+
+        /// <summary>
+        /// 角色授權，Admin 或 Teacher 角色均有權限
+        /// </summary>
+        /// <returns></returns>
+        /// <remarks>
+        /// 若只標記一個特性，用逗號分隔各種角色時，使用者角色(ClaimTypes.Role)有滿足其中一個即可。
+        /// </remarks>
+        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Roles = "Admin, Teacher")]
+        public IActionResult RoleAdminTeacher()
+        {
+            return View();
+        }
+
+        /// <summary>
+        /// 角色授權，Admin 角色才有權限，登入時 ClaimTypes.Role = "Admin" 及 ""User (必須同時包含這兩種角色)
+        /// </summary>
+        /// <returns></returns>
+        /// <remarks>
+        /// 若標記多個時，使用者角色(ClaimTypes.Role)必須同時包含列出的所有角色才能授權訪問。
+        /// </remarks>
+        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Roles = "User")]
+        public IActionResult RoleAdminUser()
         {
             return View();
         }
@@ -61,6 +107,16 @@ namespace Sample.Net6.Project.Controllers
         /// <returns></returns>
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Roles = "Teacher")]
         public IActionResult RoleTeacher()
+        {
+            return View();
+        }
+
+        /// <summary>
+        /// 策略授權
+        /// </summary>
+        /// <returns></returns>
+        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Policy = "RolePolicy")]
+        public IActionResult AuthPolicy()
         {
             return View();
         }
@@ -83,10 +139,10 @@ namespace Sample.Net6.Project.Controllers
                 var claims = new List<Claim>()
                 {
                     new Claim("UserId","1"),
-                    new Claim(ClaimTypes.Role,"Admin"),
-                    new Claim(ClaimTypes.Role,"User"),
-                    new Claim(ClaimTypes.Name,$"{name} - 來自於 Cookies"),
-                    new Claim(ClaimTypes.Email,"test12345@gmail.com"),
+                    new Claim(ClaimTypes.Role, "Admin"),
+                    new Claim(ClaimTypes.Role, "User"),
+                    new Claim(ClaimTypes.Name, name),
+                    new Claim(ClaimTypes.Email, "test12345@gmail.com"),
                     new Claim("Password", password),
                     new Claim("Account", "Administrator"),
                     new Claim("Role", "admin")

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Diagnostics;
 using NLog.Web;
@@ -40,6 +41,27 @@ builder.Services.AddAuthentication(option =>
 
     // 雖已登入，但若沒有權限，則跳轉至指定的 Action
     option.AccessDeniedPath = "/Home/NoAuthority";
+});
+
+#endregion
+
+#region 定義策略授權
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RolePolicy", policyBuilder =>
+    {
+        policyBuilder.RequireRole("Admin", "User"); // 必須至少滿足其中一個角色
+        policyBuilder.RequireClaim("Account"); // 必須包含指定的 Claim
+        policyBuilder.RequireUserName("Odin"); // 必須滿足特定使用者名稱 (ClaimTypes.Name)
+
+        // 可判斷更複雜的邏輯
+        policyBuilder.RequireAssertion(context =>
+        {
+            return context.User.HasClaim(x => x.Type == ClaimTypes.Role) &&
+                   context.User.Claims.First(x => x.Type.Equals(ClaimTypes.Role)).Value == "Admin";
+        });
+    });
 });
 
 #endregion
