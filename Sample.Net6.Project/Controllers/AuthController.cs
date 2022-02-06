@@ -112,7 +112,7 @@ namespace Sample.Net6.Project.Controllers
         }
 
         /// <summary>
-        /// 策略授權
+        /// 策略授權及 Requirement 擴展
         /// </summary>
         /// <returns></returns>
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Policy = "RolePolicy")]
@@ -143,6 +143,7 @@ namespace Sample.Net6.Project.Controllers
                     new Claim(ClaimTypes.Role, "User"),
                     new Claim(ClaimTypes.Name, name),
                     new Claim(ClaimTypes.Email, "test12345@gmail.com"),
+                    new Claim("Name", name),
                     new Claim("Password", password),
                     new Claim("Account", "Administrator"),
                     new Claim("Role", "admin")

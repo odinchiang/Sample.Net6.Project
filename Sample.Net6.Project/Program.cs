@@ -1,7 +1,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
 using NLog.Web;
+using Sample.Net6.ExceptionService;
+using Sample.Net6.Project.Utility;
 using Sample.Net6.Project.Utility.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,6 +50,9 @@ builder.Services.AddAuthentication(option =>
 
 #region 定義策略授權
 
+builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddTransient<IAuthorizationHandler, NameHandler>();
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("RolePolicy", policyBuilder =>
@@ -61,6 +67,13 @@ builder.Services.AddAuthorization(options =>
             return context.User.HasClaim(x => x.Type == ClaimTypes.Role) &&
                    context.User.Claims.First(x => x.Type.Equals(ClaimTypes.Role)).Value == "Admin";
         });
+
+        // 若要將使用者資料與資料庫或第三方的類別進行驗證，則需要進行 Requirement 的擴展
+        // 策略授權 Requirement 擴展
+        // IUserService.cs 及 UserService.cs 模擬服務層取得資料庫的資料進行驗證
+        // NameRequirement.cs
+        // NameHandler.cs
+        policyBuilder.AddRequirements(new NameRequirement());
     });
 });
 
